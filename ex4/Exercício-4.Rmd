@@ -1,0 +1,97 @@
+---
+title: "Exercício 4"
+output: html_document
+date: "2025-04-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+graphics.off()
+rm(list = ls())
+library("mlbench")
+library("corrplot")
+library(plot3D)
+
+perceptron <- function(X, y, eta, tol, maxepocas, par) {
+  N <- nrow(X)
+  n <- ncol(X)
+  error_curve <- numeric(maxepocas)
+  
+  if(par == 1){ 
+    w <- as.matrix(runif(n+1) - 0.5)
+    X <- cbind(1,X)
+  } else {
+    w <- as.matrix(runif(n) - 0.5)
+  }
+  
+  nepocas <- 0
+  erroepoca <- tol + 1
+  
+  while (erroepoca > tol && nepocas < maxepocas) {
+    xseq <- sample(N)
+    ei2 <- 0
+    
+    for (i in xseq) {
+      yhat <- 1.0*(X[i, ] %*% w) >= 0
+      erro <- y[i] - yhat
+      dw <- eta * erro * X[i, ]
+      w <- w + dw
+      ei2 <- ei2 + erro^2
+    }
+    
+    error_curve[nepocas] <- ei2 / N
+    nepocas <- nepocas + 1
+  }
+  
+  list(weights = w, error = error_curve[1:(nepocas - 1)])
+}
+
+s1 <- 0.4
+s2 <- 0.4
+nc <- 200
+xc1 <- matrix(rnorm(nc*2), ncol = 2)*s1 + t(matrix((c(2,2)), ncol = nc, nrow = 2))
+xc2 <- matrix(rnorm(nc*2), ncol = 2)*s2 + t(matrix((c(4,4)), ncol = nc, nrow = 2))
+
+plot(xc1[,1], xc1[,2], xlim = c(0,6), ylim = c(0,6), xlab = 'x1', ylab = 'x2', col = 'red')
+points(xc2[,1], xc2[,2], col = 'blue')
+
+
+xall <- rbind(xc1, xc2)
+yall <- rbind(matrix(0, ncol = 1, nrow = nrow(xc1)),
+              matrix(1, ncol = 1, nrow = nrow(xc2)))
+retlist<- perceptron(xall, yall, 0.1, 0.1, 100, 1)
+final_weights <- retlist$weights
+error_curve <- retlist$error
+
+seqx1x2 <- seq(0,6, 0.2)
+npgrid <- length(seqx1x2)
+M <- matrix(nrow = npgrid, ncol = npgrid)
+ci <- 0
+for(x1 in seqx1x2){
+  ci <- ci + 1
+  cj <- 0
+  for(x2 in seqx1x2){
+    cj<- cj + 1
+    xin <- as.matrix(cbind(1, x1,x2))
+    M[ci,cj] <- 1*((xin %*% final_weights) >= 0)
+  }
+}
+
+ribbon3D(seqx1x2, seqx1x2, M,
+         xlab = 'x1', ylab = 'x2',
+         xlim=c(0,6), ylim = c(0,6),
+         colkey = F)
+
+scatter3D(xc1[,1], xc1[,2],
+          matrix(0, nrow = dim(xc1)[1]),
+          add = T, col = 'blue', colkey = F)
+scatter3D(xc2[,1], xc2[,2],
+          matrix(0, nrow = dim(xc1)[1]),
+          add = T, col = 'red', colkey = F)
+
+
+xallplus <- cbind(-1, xall)
+yhat <- 1*((xallplus %*% final_weights) > 0)
+et <- sum(t(yall - yhat) %*% (yall - yhat))
+et
+
