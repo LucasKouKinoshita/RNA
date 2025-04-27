@@ -5,6 +5,8 @@ library("corrplot")
 library(plot3D)
 library('corpcor')
 
+source("D:/github/RNA/aulas/RBF.R")
+
 N <- 60
 xg1 <- matrix(rnorm(N*2), ncol =2, nrow = N) * 0.5 + matrix(c(2,2), ncol = 2, nrow = N, byrow = 1)
 xg2 <- matrix(rnorm(N*2), ncol =2, nrow = N) * 0.5 + matrix(c(4,4), ncol = 2, nrow = N, byrow = 1)
@@ -18,8 +20,11 @@ plot(xc1[,1], xc1[,2], col = 'red', xlim = c(0,6), ylim = c(0,6))
 par(new=TRUE)
 plot(xc2[,1], xc2[,2], col = 'blue', xlim = c(0,6), ylim = c(0,6))
 
+retlist <- kmeans(xall, 4, 10)
 retlist1 <- kmeans(xc1, 2, 10)
 retlist2 <- kmeans(xc2, 2, 10)
+
+plot(xall[,1], xall[,2], col = unlist(retlist[2]), xlim=c(0,6), ylim = c(0,6))
 
 m1all <- retlist1[[1]]
 m11 <- as.matrix(m1all[1,])
@@ -35,8 +40,7 @@ S22 <- cov(xc2[which(retlist2[[2]] == 2), ])
 
 Hxt <- matrix(nrow = 4*N, ncol = 5)
 for(i in 1:(4*N)){
-  xtr <- matrix(xall[i,], ncol = 1, nrow = 2 )
-  h1 <- pdfnvar(xtr, m11, S11, 2)
+  xtr <- matrix(xall[i,], n = 1, nrow = 2 )  h1 <- pdfnvar(xtr, m11, S11, 2)
   h2 <- pdfnvar(xtr, m12, S12, 2)
   h3 <- pdfnvar(xtr, m21, S21, 2)
   h4 <- pdfnvar(xtr, m22, S22, 2)
@@ -80,8 +84,5 @@ for(i in 1:lseq){
 
 
 
-
-
-#plot(xall[,1], xall[,2], col = unlist(retlist[2]), xlim=c(0,6), ylim = c(0,6))
 
 

@@ -1,64 +1,90 @@
 
 kmeans <- function(xin, k, maxit){
-  
-  N <- dim(xin) [1]
-  n <- dim(xin) [2]
-  
+  N <- dim(xin)[1]
+  n <- dim(xin)[2]
   iseq <- sample(N)
-  ci <- as.matrix(xin[(iseq[1:k]),])
-  
+  ci <- as.matrix(xin[iseq[1:k], ])
   c_mais_prox <- matrix(nrow = 1, ncol = N)
+  
   for(j in 1:maxit) {
     for(i in 1:N){
-      xaug_mat <- matrix(xin[i,], nrow = k, ncol = n, byrow = 1) # calculo das distancias
-      
-      dxaug_ci <- (ci-xaug_mat)*(ci-xaug_mat)
-      di_vec<-rowSums(dxaug_ci) # vetor de distancias 
-      c_mais_prox[i] <- which.min(di_vec) # menor distancia
-      
+      xaug_mat <- matrix(xin[i,], nrow = k, ncol = n, byrow = TRUE)
+      dxaug_ci <- (ci - xaug_mat)^2
+      di_vec <- rowSums(dxaug_ci)
+      c_mais_prox[i] <- which.min(di_vec)
     }
+    
     for(l in 1:k){
-      ickvet <- which(c_mais_prox == l) # vetor de indices para cada centro - > pega os indices das amostras do grupo "l"
-      ci[l,] <- colMeans(xin[ickvet,])  # media de distancias ao centro l
-    } 
+      ickvet <- which(c_mais_prox == l)
+      if (length(ickvet) > 0) {
+        ci[l,] <- colMeans(matrix(xin[ickvet, ], ncol = n))
+      }
+    }
   }
   
-  
-  return(list(ci, c_mais_prox))
+  return(list(center = ci, cluster = c_mais_prox))
 }
 
-pdfnvar <- function(x, m, K, n) ((1/sqrt*((2*pi)^n*(det(K))))) * 
-  exp*(-0.5*(t(x-m) %*% (solve(K) %*% (x-m))))
+pdfnvar <- function(x, m, K) {
+  n <- length(x)
+  coef <- 1 / sqrt((2*pi)^n * det(K))
+  expoente <- exp(-0.5 * t(x-m) %*% solve(K) %*% (x-m))
+  return(coef * expoente)
+}
 
 RBF <- function(xin, yin, p, r){
-  radialnvar <- function(x, m, invK) (ep(-0,5*(t(x-m)%*%(invK)%*%(x-m))))
+  radialnvar <- function(x, m, invK) exp(-0.5 * (t(x-m) %*% invK %*% (x-m)))
   
-  N <- dim(xin) [1]
-  n <- dim(xin) [2]
+  N <- dim(xin)[1]
+  n <- dim(xin)[2]
   
   xin <- as.matrix(xin)
   yin <- as.matrix(yin)
   
-  xclust <- kmeans(xin, p)
+  xclust <- kmeans(xin, p, 10)
   
-  m <- as.matrix(xclust$center)
-  covi <- r*diag(n)
+  m <- xclust$center
+  covi <- r * diag(n)
   inv_covi <- (1/r) * diag(n)
   
-  H <- matrix(nrow = N, ncol= p)
-  for(i in 1:N){
-    for(i in 1:p) {
+  H <- matrix(nrow = N, ncol = p)
+  for(j in 1:N){
+    for(i in 1:p){
       mi <- m[i,]
-      H[j,i] <- pdfnvar(xin[j,], mi, inv_covi )
+      H[j,i] <- radialnvar(xin[j,], mi, inv_covi)
     }
   }
   
-  Haug <- cbind(1,H)
+  Haug <- cbind(1, H)
   W <- pseudoinverse(Haug) %*% yin
-  return(list(m, covi, r, W, H))
+  
+  return(list(m, covi, r, W))
 }
 
-YRBF <- function(xin, modRBF) {
-  N <- dim(xin) [1]
-  n <- dim(xin) [2]
+YRBF <- function(xin, modRBF){
+  radialnvar <- function(x, m, invK) exp(-0.5 * (t(x-m) %*% invK %*% (x-m)))
+  
+  N <- dim(xin)[1]
+  n <- dim(xin)[2]
+  
+  m <- modRBF[[1]]
+  covi <- modRBF[[2]]
+  inv_covi <- (1/modRBF[[3]]) * diag(n)
+  W <- modRBF[[4]]
+  p <- dim(m)[1]
+  
+  xin <- as.matrix(xin)
+  H <- matrix(nrow = N, ncol = p)
+  
+  for(j in 1:N){
+    for(i in 1:p){
+      mi <- m[i,]
+      H[j,i] <- radialnvar(xin[j,], mi, inv_covi)
+    }
+  }
+  
+  Haug <- cbind(1, H)
+  Yhat <- Haug %*% W
+  
+  return(Yhat)
 }

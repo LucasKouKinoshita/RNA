@@ -37,8 +37,6 @@ perceptron <- function(X, y, eta, tol, maxepocas, par) {
 }
 
 ####### Loop 100x #########
-# Load BreastCancer
-
 # Load statlog (Heart) 
 # tratamento
 df <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/heart/heart.dat")
