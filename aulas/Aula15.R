@@ -4,8 +4,6 @@ rm(list = ls())
 library(RSNNS)
 library(plot3D)
 library('corpcor')
-source("C:/personal/RNA/aulas/RBF.R") 
-library("MASS")
 library("matlib")
 
 ### Regularização
@@ -66,15 +64,22 @@ for(L in seqL){
   Je <- t(Y) %*% (P %*% P) %*% Y
   Jew <- t(Y - Yhat_train) %*% (Y - Yhat_train)
   
-  Jw<- t(Y)%*%(P - P%*%P)*
-  Jww <- t(w) %*% (L*diag(p)) %*% w
+  Jw<- t(Y)%*%(P - P%*%P)%*%Y
+  Jww <- t(w) %*% (L * diag(p+1)) %*% w
+  
+  J <- t(Y) %*% P %*% Y
+  Jsum<-Jew+Jww
+  #print(cbind(Je, Jew))
+  #print(cbind(Jw, Jww))
+  #print(cbind(J,Jsum))
+  
   Jwwvec[cl]<- Jww
   Jewvec[cl]<- Jew
   
-  Jwvec[cl]<- Jw
+  Jwvec[cl] <- Jw
   Jevec[cl]<- Je
   
-  evec[cl] <- e_train
+  evec[cl] <- mean(e_train^2)
   wvec[cl] <- t(w)%*%w # Norma quadatica
   
 }
@@ -85,5 +90,8 @@ plot(wvec)
 plot(evec)
 
 plot(Jevec)
+plot(Jewvec)
+
 plot(Jwvec)
+plot(Jwwvec)
 
