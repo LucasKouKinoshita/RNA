@@ -1,0 +1,5 @@
+graphics.off()
+rm(list = ls())
+library("mlbench")
+library(plot3D)
+library('corpcor')
