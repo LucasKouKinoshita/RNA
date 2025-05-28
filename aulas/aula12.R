@@ -5,7 +5,7 @@ library("corrplot")
 library(plot3D)
 library('corpcor')
 
-source("D:/github/RNA/aulas/RBF.R")
+source("C:/personal/RNA/aulas/RBF.R") 
 
 N <- 60
 xg1 <- matrix(rnorm(N*2), ncol =2, nrow = N) * 0.5 + matrix(c(2,2), ncol = 2, nrow = N, byrow = 1)
