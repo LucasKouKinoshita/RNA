@@ -125,13 +125,6 @@ while((nepocas < maxepocas) && (eepoca > tol)){
     xproj[i,1] <- i4
     xproj[i,2] <- i5
   }
-  xc1<-rbind(xproj[1,], xproj[4,])
-  xc2<-xproj[(2:3),]
-  
-  plot(xc1[,1], xc1[,2], col = 'red')
-  par(new=T)
-  plot(xc2[,1], xc2[,2], col = 'blue')
-  Sys.sleep(0.05) 
   
   nepocas <- nepocas + 1
   evec[nepocas] <- ei2/N # erro po amostra
